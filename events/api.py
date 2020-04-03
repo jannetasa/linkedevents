@@ -23,6 +23,7 @@ from django.db.models import Q, QuerySet
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.utils.encoding import force_text
+from django.contrib.postgres.search import SearchVector, SearchQuery
 from rest_framework import (
     serializers, relations, viewsets, mixins, filters, generics, permissions
 )
@@ -1577,6 +1578,20 @@ def _filter_event_queryset(queryset, params, srs=None):
         for field in fields:
             # check all languages for each field
             qset |= _text_qset_by_translated_field(field, val)
+        queryset = queryset.filter(qset)
+
+    val = params.get('fts', None)
+    if val:
+        qset = Q()
+        langs = [
+            ('fi', 'finnish'),
+            ('sv', 'finnish'),
+            ('en', 'english'),
+            ('ru', 'russian'),
+            ('simple', 'simple'),
+        ]
+        for lang, config in langs:
+            qset |= Q(**{'search_vector_' + lang: SearchQuery(val, config=config)})
         queryset = queryset.filter(qset)
 
     val = params.get('last_modified_since', None)

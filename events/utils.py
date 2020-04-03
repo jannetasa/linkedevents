@@ -146,3 +146,33 @@ def get_deleted_object_name():
         'sv': 'RADERAD',
         'en': 'DELETED',
     }
+
+
+def update_fts_indexes():
+    from collections import defaultdict
+    from events.translation import EventTranslationOptions
+    from events.models import Event
+    from django.contrib.postgres.search import SearchVector
+    langs = [
+        ('fi', 'fi'),
+        ('sv', 'sv'),
+        ('en', 'en'),
+        ('ru', 'ru'),
+        ('zh_hans', 'simple'),
+        ('ar', 'simple')
+    ]
+    search_fields = defaultdict(list)
+    for lang, target in langs:
+        for field in EventTranslationOptions.fields:
+            search_fields[target].append(field + '_' + lang)
+
+    langs = [
+        ('fi', 'finnish'),
+        ('sv', 'swedish'),
+        ('en', 'english'),
+        ('ru', 'russian'),
+        ('simple', 'simple'),
+    ]
+    import pdb; pdb.set_trace()
+    for lang, config in langs:
+        Event.objects.update(**{'search_vector_' + lang: SearchVector(*search_fields[lang], config=config)})

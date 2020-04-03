@@ -32,6 +32,7 @@ from django.contrib.contenttypes.models import ContentType
 from events import translation_utils
 from django.utils.encoding import python_2_unicode_compatible
 from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.search import SearchVectorField
 from django.contrib.sites.models import Site
 from django.core.mail import send_mail
 from django.db import transaction
@@ -582,6 +583,13 @@ class Event(MPTTModel, BaseModel, SchemalessFieldMixin, ReplacedByMixin):
     # Custom fields not from schema.org
     keywords = models.ManyToManyField(Keyword, related_name='events')
     audience = models.ManyToManyField(Keyword, related_name='audience_events', blank=True)
+
+    # FTS index
+    search_vector_fi = SearchVectorField(null=True)
+    search_vector_sv = SearchVectorField(null=True)
+    search_vector_en = SearchVectorField(null=True)
+    search_vector_ru = SearchVectorField(null=True)
+    search_vector_simple = SearchVectorField(null=True)
 
     class Meta:
         verbose_name = _('event')
