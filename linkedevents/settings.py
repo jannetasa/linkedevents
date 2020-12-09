@@ -492,7 +492,7 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
         'TIMEOUT': 300,
     },
-    'ongoing_local': {
+    'ongoing_events': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
         'TIMEOUT': None,

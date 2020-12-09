@@ -15,6 +15,7 @@ from functools import partial
 import bleach
 import django_filters
 import pytz
+import regex
 from django.conf import settings
 from django.contrib.postgres.search import TrigramSimilarity
 from django.core.cache import caches
@@ -1808,21 +1809,36 @@ def _filter_event_queryset(queryset, params, srs=None):
         queryset = queryset.filter(*qsets)
 
     #  This filtering param requires populate_local_event_cache management command
-    val = params.get('local_ongoing_AND', None)
-    if val:
-        cache = caches['ongoing_local']
-        val = val.lower()
-        vals = val.split(',')
-        ids = {k for k, v in cache.get('ids').items() if all(val in v for val in vals)}
-        queryset = queryset.filter(id__in=ids)
+    if any('_ongoing_' in k for k, v in params.items()):
+        cache_source = None
+        regex_join = None
+        if any('local_ongoing' in k for k, v in params.items()):
+            cache_source = 'local_ids'
+            qparam = 'local'
+        elif any('internet_ongoing' in k for k, v in params.items()):
+            cache_source = 'internet_ids'
+            qparam = 'internet'
 
-    val = params.get('local_ongoing_OR', None)
-    if val:
-        cache = caches['ongoing_local']
-        val = val.lower()
-        vals = val.split(',')
-        ids = {k for k, v in cache.get('ids').items() if any(val in v for val in vals)}
-        queryset = queryset.filter(id__in=ids)
+        if any('_ongoing_AND' in k for k, v in params.items()):
+            regex_join = ''
+            qparam = f'{qparam}_ongoing_AND'
+        elif any('_ongoing_OR' in k for k, v in params.items()):
+            regex_join = '|'
+            qparam = f'{qparam}_ongoing_OR'
+
+        if cache_source:
+            val = params.get(qparam)
+            cache = caches['ongoing_events']
+            vals = val.split(',')
+            valexprs = [f'(?=.*{val}{{e<2}})' for val in vals]
+            expr = f"{regex_join.join(valexprs)}.*"
+            rc = regex.compile(expr, regex.IGNORECASE)
+            ids = {k for k, v in cache.get(cache_source).items() if rc.match(v)}
+            queryset = queryset.filter(id__in=ids)
+
+    val = params.get('internet_based', None)
+    if val and validate_bool(val, 'internet_based'):
+        queryset = queryset.filter(location__id__contains='internet')
 
     val = params.get('last_modified_since', None)
     # This should be in format which dateutil.parser recognizes, e.g.
