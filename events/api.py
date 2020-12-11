@@ -1749,6 +1749,24 @@ def parse_duration_string(duration):
     return int(val) * mul
 
 
+def _terms_to_regex(terms, operator, fuzziness=2):
+    """
+    Create a  compiled regex from of the rpvided terms of the form
+    r'(?=.*term1{e<2}')|(?=.*term2{e<2}).*" This would match a string
+    with terms aligned in any order allowing two edits per term.
+    """
+
+    vals = terms.split(',')
+    valexprs = [f'(?=.*{val}{{e<{fuzziness}}})' for val in vals]
+    if operator == 'AND':
+        regex_join = ''
+    elif operator == 'OR':
+        regex_join = '|'
+
+    expr = f"{regex_join.join(valexprs)}.*"
+    return regex.compile(expr, regex.IGNORECASE)
+
+
 def _filter_event_queryset(queryset, params, srs=None):
     """
     Filter events queryset by params
@@ -1808,33 +1826,45 @@ def _filter_event_queryset(queryset, params, srs=None):
             qset = Q()
         queryset = queryset.filter(*qsets)
 
-    #  This filtering param requires populate_local_event_cache management command
-    if any('_ongoing_' in k for k, v in params.items()):
-        cache_source = None
-        regex_join = None
-        if any('local_ongoing' in k for k, v in params.items()):
-            cache_source = 'local_ids'
-            qparam = 'local'
-        elif any('internet_ongoing' in k for k, v in params.items()):
-            cache_source = 'internet_ids'
-            qparam = 'internet'
+    #  The following 'ongoing' filtering params require populate_local_event_cache management command running
+    cache = caches['ongoing_events']
+    val = params.get('local_ongoing_AND', None)
+    if val:
+        rc = _terms_to_regex(val, 'AND')
+        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
 
-        if any('_ongoing_AND' in k for k, v in params.items()):
-            regex_join = ''
-            qparam = f'{qparam}_ongoing_AND'
-        elif any('_ongoing_OR' in k for k, v in params.items()):
-            regex_join = '|'
-            qparam = f'{qparam}_ongoing_OR'
+    val = params.get('local_ongoing_OR', None)
+    if val:
+        rc = _terms_to_regex(val, 'OR')
+        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
 
-        if cache_source:
-            val = params.get(qparam)
-            cache = caches['ongoing_events']
-            vals = val.split(',')
-            valexprs = [f'(?=.*{val}{{e<2}})' for val in vals]
-            expr = f"{regex_join.join(valexprs)}.*"
-            rc = regex.compile(expr, regex.IGNORECASE)
-            ids = {k for k, v in cache.get(cache_source).items() if rc.match(v)}
-            queryset = queryset.filter(id__in=ids)
+    val = params.get('internet_ongoing_AND', None)
+    if val:
+        rc = _terms_to_regex(val, 'AND')
+        ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
+
+    val = params.get('internet_ongoing_OR', None)
+    if val:
+        rc = _terms_to_regex(val, 'OR')
+        ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
+
+    val = params.get('all_ongoing_AND', None)
+    if val:
+        rc = _terms_to_regex(val, 'AND')
+        cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}
+        ids = {k for k, v in cached_ids.items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
+
+    val = params.get('all_ongoing_OR', None)
+    if val:
+        rc = _terms_to_regex(val, 'OR')
+        cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}
+        ids = {k for k, v in cached_ids.items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
 
     val = params.get('internet_based', None)
     if val and validate_bool(val, 'internet_based'):

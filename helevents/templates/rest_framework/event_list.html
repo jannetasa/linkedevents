@@ -132,12 +132,18 @@ description, name, and keyword fields. Locality is defined on the basis of MUNIG
 <pre><code>event/?local_ongoing_AND=lapsa,musiikki
 </code></pre>
 <p><a href="?local_ongoing_AND=lapsa,musiikki" title="json">See the result</a></p>
-<h3 id="local-ongoing">Ongoing internet events</h3>
-<p>Use to quickly access internet-based events that are upcoming or have not ended yet. Usage is the same as for local ongoing events, two possible parameters: <code>?internet_ongoing_AND</code> and <code>?internet_ongoing_OR</code> Note, that <code>local_ongoing</code> and <code>internet_ongoing</code> are mutually exclusive.</p>
+<h3 id="internet-ongoing">Ongoing internet events</h3>
+<p>Use to quickly access internet-based events that are upcoming or have not ended yet. Usage is the same as for local ongoing events, two variations: <code>?internet_ongoing_AND</code> and <code>?internet_ongoing_OR</code> Note, that <code>local_ongoing</code> and <code>internet_ongoing</code> are mutually exclusive.</p>
 <p>Example:</p>
-<pre><code>event/?internet_ongoing_AND=lapsi,musiiki
+<pre><code>event/?internet_ongoing_AND=lapsa,musiiki
 </code></pre>
-<p><a href="?internet_ongoing_AND=lapsi,musiiki" title="json">See the result</a></p>
+<p><a href="?internet_ongoing_AND=lapsa,musiiki" title="json">See the result</a></p>
+<h3 id="all-ongoing">All ongoing events</h3>
+<p>All ongoing events, both internet and local combined. Usage is the same as for local ongoing events: <code>?all_ongoing_AND</code> and <code>?all_ongoing_OR</code></p>
+<p>Example:</p>
+<pre><code>event/?all_ongoing_AND=lapsa,musiiki
+</code></pre>
+<p><a href="?all_ongoing_AND=lapsa,musiiki" title="json">See the result</a></p>
 <h3 id="internet-based">Internet based</h3>
 <p>Filter for all the events that happen in the internet, both past and upcoming.</p>
 <p>Example:</p>
