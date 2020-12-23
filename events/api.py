@@ -1849,6 +1849,12 @@ def _filter_event_queryset(queryset, params, srs=None):
 
     #  The following 'ongoing' filtering params require populate_local_event_cache management command running
     cache = caches['ongoing_events']
+
+    val = params.get('local_ongoing', None)
+    if val and validate_bool(val, 'local_ongoing'):
+        ids = {k for k, v in cache.get('local_ids').items()}
+        queryset = queryset.filter(id__in=ids)
+
     val = params.get('local_ongoing_AND', None)
     if val:
         rc = _terms_to_regex(val, 'AND')
@@ -1871,6 +1877,11 @@ def _filter_event_queryset(queryset, params, srs=None):
     if val:
         rc = _terms_to_regex(val, 'OR')
         ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
+
+    val = params.get('all_ongoing', None)
+    if val and validate_bool(val, 'all_ongoing'):
+        ids = {k for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('all_ongoing_AND', None)
