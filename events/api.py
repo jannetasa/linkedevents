@@ -2091,7 +2091,7 @@ def _filter_event_queryset(queryset, params, srs=None):
                 q = q | Q(in_language__id=lang) | Q(**name_arg) | Q(**desc_arg) | Q(**short_desc_arg)
             else:
                 q = q | Q(in_language__id=lang)
-        queryset = queryset.filter(q)
+        queryset = queryset.filter(q).distinct()
 
     # Filter by in_language field only
     val = params.get('in_language', None)
