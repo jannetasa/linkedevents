@@ -1749,7 +1749,7 @@ def parse_duration_string(duration):
     return int(val) * mul
 
 
-def _terms_to_regex(terms, operator, fuzziness=2):
+def _terms_to_regex(terms, operator, fuzziness=3):
     """
     Create a  compiled regex from of the rpvided terms of the form
     r'(?=.*term1{e<2}')|(?=.*term2{e<2}).*" This would match a string
@@ -1792,6 +1792,27 @@ def _filter_event_queryset(queryset, params, srs=None):
             # check all languages for each field
             qset |= _text_qset_by_translated_field(location_field, val)
 
+        queryset = queryset.filter(qset)
+
+    vals = params.get('keyword_set_AND', None)
+    if vals:
+        vals = vals.split(',')
+        keyword_sets = KeywordSet.objects.filter(id__in=vals)
+        for keyword_set in keyword_sets:
+            keywords = keyword_set.keywords.all()
+            qset = Q(keywords__in=keywords)
+            queryset = queryset.filter(qset)
+
+    vals = params.get('keyword_set_OR', None)
+    if vals:
+        vals = vals.split(',')
+        keyword_sets = KeywordSet.objects.filter(id__in=vals)
+        all_keywords = set()
+        for keyword_set in keyword_sets:
+            keywords = keyword_set.keywords.all()
+            all_keywords.update(keywords)
+
+        qset = Q(keywords__in=all_keywords)
         queryset = queryset.filter(qset)
 
     #  Filter by event translated fields and keywords combined. The code is

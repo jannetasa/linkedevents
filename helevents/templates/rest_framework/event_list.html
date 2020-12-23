@@ -77,6 +77,7 @@ regardless of division type.</p>
 <pre><code>event/?division=malmi
 </code></pre>
 <p><a href="?division=malmi" title="json">See the result</a></p>
+
 <h3 id="event-category">Event category</h3>
 <p>To restrict the retrieved events by category, use the query
 parameter <code>keyword</code>, separating values by commas if you wish to
@@ -94,6 +95,15 @@ which list the YSO keywords that are present in most events to specify event mai
 <pre><code>event/?keyword=yso:p4354
 </code></pre>
 <p><a href="?keyword=yso:p4354" title="json">See the result</a></p>
+
+<h3 id="event-category">Keyword set search</h3>
+<p>Some services maintain curated keyword sets, which can also be used in search with query parameters
+<code>keyword_set_AND</code> and <code>keyword_set_OR</code>. As names of the keyword sets can repeat 
+between the services, ids should be supplied. Say, we have one keyword set <b>Music</b> with id "myservice:1"
+that contains keywords rock and jazz, and another keyword set <b>Workshops</b> with keywords "workshop" and "seminar"
+and id "myservice:2". Then a request <code>/event/?keyword_set_AND=myservice:1,myservice:2</code>
+would return the events matching the following expression: (rock OR jazz) AND (workshop OR seminar).</p>
+
 <h3 id="event-last-modified">Event last modification time</h3>
 <p>To find events that have changed since you last polled Linkedevents API (to e.g. update your event cache),
 it is best to use the query parameter <code>last_modified_since</code>. This allows you to only return data
