@@ -1850,10 +1850,38 @@ def _filter_event_queryset(queryset, params, srs=None):
     #  The following 'ongoing' filtering params require populate_local_event_cache management command running
     cache = caches['ongoing_events']
 
-    val = params.get('local_ongoing', None)
-    if val and validate_bool(val, 'local_ongoing'):
-        ids = {k for k, v in cache.get('local_ids').items()}
+    if 'local_ongoing_OR_set' in ''.join(params):
+        count = 1
+        all_ids = []
+        while f'local_ongoing_OR_set{count}' in params:
+            val = params.get(f'local_ongoing_OR_set{count}', None)
+            if val:
+                rc = _terms_to_regex(val, 'OR')
+                all_ids.append({k for k, v in cache.get('local_ids').items() if rc.match(v)})
+                count += 1
+        ids = set.intersection(*all_ids)
         queryset = queryset.filter(id__in=ids)
+
+    if 'internet_ongoing_OR_set' in ''.join(params):
+        count = 1
+        while f'internet_ongoing_OR_set{count}' in params:
+            val = params.get(f'internet_ongoing_OR_set{count}', None)
+            if val:
+                rc = _terms_to_regex(val, 'OR')
+                ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+                queryset = queryset.filter(id__in=ids)
+                count += 1
+
+    if 'all_ongoing_OR_set' in ''.join(params):
+        count = 1
+        while f'all_ongoing_OR_set{count}' in params:
+            val = params.get(f'all_ongoing_OR_set{count}', None)
+            if val:
+                rc = _terms_to_regex(val, 'OR')
+                cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}  # noqa E501
+                ids = {k for k, v in cached_ids.items() if rc.match(v)}
+                queryset = queryset.filter(id__in=ids)
+                count += 1
 
     val = params.get('local_ongoing_AND', None)
     if val:
