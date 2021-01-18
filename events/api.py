@@ -1757,13 +1757,13 @@ def _terms_to_regex(terms, operator, fuzziness=3):
     """
 
     vals = terms.split(',')
-    valexprs = [f'(?=.*{val}{{e<{fuzziness}}})' for val in vals]
+    valexprs = [f'(.*?{val}{{e<{fuzziness}}})' for val in vals]
     if operator == 'AND':
         regex_join = ''
     elif operator == 'OR':
         regex_join = '|'
 
-    expr = f"{regex_join.join(valexprs)}.*"
+    expr = f"{regex_join.join(valexprs)}"
     return regex.compile(expr, regex.IGNORECASE)
 
 
@@ -1857,7 +1857,7 @@ def _filter_event_queryset(queryset, params, srs=None):
             val = params.get(f'local_ongoing_OR_set{count}', None)
             if val:
                 rc = _terms_to_regex(val, 'OR')
-                all_ids.append({k for k, v in cache.get('local_ids').items() if rc.match(v)})
+                all_ids.append({k for k, v in cache.get('local_ids').items() if rc.search(v)})
                 count += 1
         ids = set.intersection(*all_ids)
         queryset = queryset.filter(id__in=ids)
@@ -1868,7 +1868,7 @@ def _filter_event_queryset(queryset, params, srs=None):
             val = params.get(f'internet_ongoing_OR_set{count}', None)
             if val:
                 rc = _terms_to_regex(val, 'OR')
-                ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+                ids = {k for k, v in cache.get('internet_ids').items() if rc.search(v)}
                 queryset = queryset.filter(id__in=ids)
                 count += 1
 
@@ -1879,32 +1879,32 @@ def _filter_event_queryset(queryset, params, srs=None):
             if val:
                 rc = _terms_to_regex(val, 'OR')
                 cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}  # noqa E501
-                ids = {k for k, v in cached_ids.items() if rc.match(v)}
+                ids = {k for k, v in cached_ids.items() if rc.search(v)}
                 queryset = queryset.filter(id__in=ids)
                 count += 1
 
     val = params.get('local_ongoing_AND', None)
     if val:
         rc = _terms_to_regex(val, 'AND')
-        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
+        ids = {k for k, v in cache.get('local_ids').items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('local_ongoing_OR', None)
     if val:
         rc = _terms_to_regex(val, 'OR')
-        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
+        ids = {k for k, v in cache.get('local_ids').items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('internet_ongoing_AND', None)
     if val:
         rc = _terms_to_regex(val, 'AND')
-        ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+        ids = {k for k, v in cache.get('internet_ids').items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('internet_ongoing_OR', None)
     if val:
         rc = _terms_to_regex(val, 'OR')
-        ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
+        ids = {k for k, v in cache.get('internet_ids').items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('all_ongoing', None)
@@ -1916,14 +1916,14 @@ def _filter_event_queryset(queryset, params, srs=None):
     if val:
         rc = _terms_to_regex(val, 'AND')
         cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}
-        ids = {k for k, v in cached_ids.items() if rc.match(v)}
+        ids = {k for k, v in cached_ids.items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('all_ongoing_OR', None)
     if val:
         rc = _terms_to_regex(val, 'OR')
         cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}
-        ids = {k for k, v in cached_ids.items() if rc.match(v)}
+        ids = {k for k, v in cached_ids.items() if rc.search(v)}
         queryset = queryset.filter(id__in=ids)
 
     val = params.get('internet_based', None)
