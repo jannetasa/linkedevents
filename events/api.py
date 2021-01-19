@@ -1757,7 +1757,7 @@ def _terms_to_regex(terms, operator, fuzziness=3):
     """
 
     vals = terms.split(',')
-    valexprs = [f'(.*?{val}{{e<{fuzziness}}})' for val in vals]
+    valexprs = [f'.*?({val}){{e<{fuzziness}}}' for val in vals]
     if operator == 'AND':
         regex_join = ''
     elif operator == 'OR':
