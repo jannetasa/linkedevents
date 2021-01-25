@@ -32,7 +32,7 @@ class Command(BaseCommand):
             event_dict[i[0]].update(i[1:])
             event_dict[i[0]].discard(None)
 
-        event_strings = {k: " ".join(v) for k, v in event_dict.items()}
+        event_strings = {k: " ".join(v).replace('\n', ' ').replace('\r', ' ') for k, v in event_dict.items()}
 
         cache.set('local_ids', event_strings)
 
@@ -52,6 +52,6 @@ class Command(BaseCommand):
             event_dict[i[0]].update(i[1:])
             event_dict[i[0]].discard(None)
 
-        event_strings = {k: " ".join(v) for k, v in event_dict.items()}
+        event_strings = {k: " ".join(v).replace('\n', ' ').replace('\r', ' ') for k, v in event_dict.items()}
 
         cache.set('internet_ids', event_strings)
