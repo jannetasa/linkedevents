@@ -1774,6 +1774,15 @@ def _filter_event_queryset(queryset, params, srs=None):
     """
     # Filter by string (case insensitive). This searches from all fields
     # which are marked translatable in translation.py
+
+    cache = caches['ongoing_events']
+
+    val = params.get('local_ongoing_OR', None)
+    if val:
+        rc = _terms_to_regex(val, 'OR')
+        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
+        queryset = queryset.filter(id__in=ids)
+
     val = params.get('text', None)
     if val:
         val = val.lower()
@@ -1848,7 +1857,6 @@ def _filter_event_queryset(queryset, params, srs=None):
         queryset = queryset.filter(*qsets)
 
     #  The following 'ongoing' filtering params require populate_local_event_cache management command running
-    cache = caches['ongoing_events']
 
     if 'local_ongoing_OR_set' in ''.join(params):
         count = 1
@@ -1895,12 +1903,6 @@ def _filter_event_queryset(queryset, params, srs=None):
     val = params.get('local_ongoing_AND', None)
     if val:
         rc = _terms_to_regex(val, 'AND')
-        ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
-        queryset = queryset.filter(id__in=ids)
-
-    val = params.get('local_ongoing_OR', None)
-    if val:
-        rc = _terms_to_regex(val, 'OR')
         ids = {k for k, v in cache.get('local_ids').items() if rc.match(v)}
         queryset = queryset.filter(id__in=ids)
 
