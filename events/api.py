@@ -1757,7 +1757,7 @@ def _terms_to_regex(terms, operator, fuzziness=3):
     """
 
     vals = terms.split(',')
-    valexprs = [f'.*?({val}){{e<{fuzziness}}}' for val in vals]
+    valexprs = [f'.*?{val}' for val in vals]
     if operator == 'AND':
         regex_join = ''
     elif operator == 'OR':
@@ -1858,7 +1858,7 @@ def _filter_event_queryset(queryset, params, srs=None):
             if val:
                 rc = _terms_to_regex(val, 'OR')
                 all_ids.append({k for k, v in cache.get('local_ids').items() if rc.match(v)})
-                count += 1
+            count += 1
         ids = set.intersection(*all_ids)
         queryset = queryset.filter(id__in=ids)
 
@@ -1870,7 +1870,7 @@ def _filter_event_queryset(queryset, params, srs=None):
                 rc = _terms_to_regex(val, 'OR')
                 ids = {k for k, v in cache.get('internet_ids').items() if rc.match(v)}
                 queryset = queryset.filter(id__in=ids)
-                count += 1
+            count += 1
 
     if 'all_ongoing_OR_set' in ''.join(params):
         count = 1
@@ -1881,7 +1881,16 @@ def _filter_event_queryset(queryset, params, srs=None):
                 cached_ids = {k: v for i in cache.get_many(['internet_ids', 'local_ids']).values() for k, v in i.items()}  # noqa E501
                 ids = {k for k, v in cached_ids.items() if rc.match(v)}
                 queryset = queryset.filter(id__in=ids)
-                count += 1
+            count += 1
+
+    if 'keyword_OR_set' in ''.join(params):
+        count = 1
+        while f'keyword_OR_set{count}' in params:
+            val = params.get(f'keyword_OR_set{count}', None)
+            if val:
+                val = val.split(',')
+                queryset = queryset.filter(keywords__pk__in=val)
+            count += 1
 
     val = params.get('local_ongoing_AND', None)
     if val:

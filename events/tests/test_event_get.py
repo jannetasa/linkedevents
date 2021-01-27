@@ -994,8 +994,21 @@ def test_keywordset_search(api_client, event, event2, event3, keyword, keyword2,
     assert_events_in_response([event, event2], response)
     response = get_list(api_client, query_string='keyword_set_OR=set:1,set:2')
     assert_events_in_response([event, event2, event3], response)
-
     event3.keywords.remove(keyword, keyword2)
     event3.save()
     response = get_list(api_client, query_string='keyword_set_AND=set:1,set:2')
+    assert_events_in_response([event, event2], response)
+
+
+@pytest.mark.django_db
+def test_keyword_OR_set_search(api_client, event, event2, event3, keyword, keyword2, keyword3,
+                               keyword_set, keyword_set2):
+    event.keywords.add(keyword, keyword3)
+    event.save()
+    event2.keywords.add(keyword2, keyword3)
+    event2.save()
+    event3.keywords.add(keyword, keyword2)
+    event3.save()
+    load = f'keyword_OR_set1={keyword.id},{keyword2.id}&keyword_OR_set2={keyword3.id}'
+    response = get_list(api_client, query_string=load)
     assert_events_in_response([event, event2], response)
