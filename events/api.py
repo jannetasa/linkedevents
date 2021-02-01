@@ -1892,13 +1892,13 @@ def _filter_event_queryset(queryset, params, srs=None):
             count += 1
 
     if 'keyword_OR_set' in ''.join(params):
-        count = 1
-        while f'keyword_OR_set{count}' in params:
-            val = params.get(f'keyword_OR_set{count}', None)
+        rc = regex.compile('keyword_OR_set[0-9]*')
+        all_sets = rc.findall(''.join(params))
+        for i in all_sets:
+            val = params.get(i, None)
             if val:
                 val = val.split(',')
                 queryset = queryset.filter(keywords__pk__in=val)
-            count += 1
 
     val = params.get('local_ongoing_AND', None)
     if val:
