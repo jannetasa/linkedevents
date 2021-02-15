@@ -1,7 +1,7 @@
 import environ
 from django.conf.urls import include, url
 from django.contrib import admin
-from django.urls import reverse
+from django.urls import reverse, path
 from django.views.generic import RedirectView
 
 from .api import LinkedEventsAPIRouter
@@ -20,8 +20,9 @@ class RedirectToAPIRootView(RedirectView):
 urlpatterns = [
     url(r'^(?P<version>(v0.1|v1))/', include(api_router.urls)),
     url(r'^admin/', admin.site.urls),
-    url(r'^accounts/', include('allauth.urls')),
     url(r'^$', RedirectToAPIRootView.as_view()),
+    path('auth/', include('social_django.urls', namespace='social')),
+    path('helauth/', include('helusers.urls')),
 ]
 
 if env('DEBUG'):

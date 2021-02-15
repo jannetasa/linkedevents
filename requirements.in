@@ -2,7 +2,6 @@ attrs
 beautifulsoup4
 bleach
 django-admin-autocomplete-filter
-django-allauth
 django-anymail
 django-cleanup
 django-cors-headers
@@ -22,7 +21,7 @@ django>=2.2,<3.0
 djangorestframework
 djangorestframework-bulk
 djangorestframework-gis
-djangorestframework-jwt
+drf-oidc-auth
 easy_thumbnails
 elasticsearch<6
 httmock
@@ -46,4 +45,5 @@ requests-cache
 requests>=2.20.0
 sentry-sdk
 six
+social-auth-app-django
 whitenoise

@@ -128,7 +128,7 @@ LOGGING = {
 
 # Application definition
 INSTALLED_APPS = [
-    'helusers',
+    'helusers.apps.HelusersConfig',
     'django.contrib.sites',
     'modeltranslation',
     'helusers.apps.HelusersAdminConfig',
@@ -147,7 +147,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_gis',
-    'rest_framework_jwt',
     'mptt',
     'reversion',
     'haystack',
@@ -156,16 +155,14 @@ INSTALLED_APPS = [
     'django_jinja',
     'notifications',
     'anymail',
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
     'helusers.providers.helsinki',
-
     'helevents',
     'munigeo',
     'leaflet',
     'django_orghierarchy',
     'admin_auto_filters',
+    'social_django',
+    'extension_course',
 ] + env('EXTRA_INSTALLED_APPS')
 
 if env('SENTRY_DSN'):
@@ -193,7 +190,7 @@ MIDDLEWARE = [
 
 # django-extensions is a set of developer friendly tools
 if DEBUG:
-    INSTALLED_APPS.extend(['django_extensions', 'debug_toolbar', 'extension_course'])
+    INSTALLED_APPS.extend(['django_extensions', 'debug_toolbar'])
     MIDDLEWARE.append('debug_toolbar.middleware.DebugToolbarMiddleware')
 
 ROOT_URLCONF = 'linkedevents.urls'
@@ -246,17 +243,13 @@ USE_X_FORWARDED_HOST = env('TRUST_X_FORWARDED_HOST')
 #
 AUTH_USER_MODEL = 'helevents.User'
 AUTHENTICATION_BACKENDS = (
+    'helusers.tunnistamo_oidc.TunnistamoOIDCAuth',
     'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
 )
-SOCIALACCOUNT_PROVIDERS = {
-    'helsinki': {
-        'VERIFIED_EMAIL': True
-    }
-}
+
 LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_ON_GET = True
-SOCIALACCOUNT_ADAPTER = 'helusers.adapter.SocialAccountAdapter'
 
 #
 # REST Framework
@@ -284,7 +277,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'events.auth.ApiKeyAuthentication',
-        'helusers.jwt.JWTAuthentication',
+        'helusers.oidc.ApiTokenAuthentication',
     ),
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.URLPathVersioning',
     'VIEW_NAME_FUNCTION': 'events.api.get_view_name',
@@ -298,7 +291,7 @@ JWT_AUTH = {
 CORS_ORIGIN_ALLOW_ALL = True
 CSRF_COOKIE_NAME = '%s-csrftoken' % env('COOKIE_PREFIX')
 SESSION_COOKIE_NAME = '%s-sessionid' % env('COOKIE_PREFIX')
-
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
 
 TEMPLATES = [
     {
