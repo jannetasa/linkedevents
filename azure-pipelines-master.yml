@@ -25,13 +25,13 @@ pool: Default
 resources:
   repositories:
   # Azure DevOps repository
-  - repository: PROJECTNAME-pipelines
+  - repository: tasalinkedevents2-automationtest2-pipelines
     type: git
     # Azure DevOps project/repository
-    name: PROJECTNAME/PROJECTNAME-pipelines
+    name: tasalinkedevents2-automationtest2/tasalinkedevents2-automationtest2-pipelines
 
 extends:
   # Filename in Azure DevOps Repository (note possible -ui or -api)
   # Django example: azure-pipelines-PROJECTNAME-api-master.yml
   # Drupal example: azure-pipelines-PROJECTNAME-master.yml
-  template: azure-pipelines-PROJECTNAME-master.yml@PROJECTNAME-pipelines
+  template: azure-pipelines-tasalinkedevents2-automationtest2-api-master.yml@tasalinkedevents2-automationtest2-pipelines
